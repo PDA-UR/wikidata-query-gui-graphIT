@@ -178,7 +178,8 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 				node = {
 					id: nodeId,
 					label: label,
-					title: label
+					title: label,
+					shape: "star",
 				};
 				if ( rows[rowIndex] ) { // create new edge
 					edge = {
