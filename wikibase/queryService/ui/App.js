@@ -566,6 +566,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 			ns,
 			container = $( '.namespace-shortcuts' ),
 			namespaces = wikibase.queryService.RdfNamespaces.NAMESPACE_SHORTCUTS;
+			console.log("names", namespaces);
 
 		container.click( function ( e ) {
 			e.stopPropagation();
@@ -776,7 +777,9 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 				if ( self._selectedResultBrowser ) {
 					b = '#defaultView:' + self._selectedResultBrowser + '\n';
 					b = encodeURIComponent( b );
-				}
+				} // NOTE: define using #comment
+				console.log("hi")
+				
 				var $link = $( '<a>' )
 					.attr( 'href', 'embed.html#' + b + window.location.hash.substring( 1 ) );
 				var $html = $( '<textarea>' ).text(
@@ -808,6 +811,8 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 			this._hasRunFirstQuery = true;
 		}
 
+		console.log("hi on execute -> \n", this._editor.getValue());
+
 		e.preventDefault();
 		this._editor.save();
 		this._updateQueryUrl();
@@ -822,6 +827,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 			$( '#execute-button' ).prop( 'disabled', false );
 		} else {
 			$( '#empty-query-error' ).hide();
+			// here
 			this._resultView.draw( this._editor.getValue() ).catch( function ( error ) {
 				try {
 					self._editor.highlightError( error );

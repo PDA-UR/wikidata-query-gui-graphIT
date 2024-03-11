@@ -1,3 +1,64 @@
+## Additional Information for this Fork
+Develop with a local wikibase docker setup:
+- set up a default one using this [guide](https://www.mediawiki.org/wiki/Wikibase/Docker) (should be fine with just the minimal install)
+- set up a custom GraphIT configuration using the private repo 
+- insert (test) data
+
+### In this Repo
+- for development use:
+  - `npm start` (uses http-server)
+  - or smth like the vs-code extension "Live Server" (for automatic reload)
+  - (and start your docker container, of course)
+- create a `custom-config.js` file and override the necessary settings, with something like this:
+```json
+{
+    "api": {
+      "sparql": {
+        "uri": "http://localhost:8834/proxy/wdqs/bigdata/namespace/wdq/sparql"
+      },
+      "wikibase": {
+        "uri": "http://localhost:80/w/api.php"
+      }
+    }
+}
+```
+- NOTE: can cause issues with CORS. So you can try adding `$wgCrossSiteAJAXdomains = ['*', "optional:your-local-url"];` to the `LocalSettings.php` of your local wikibase docker setup (don't push this change!)
+- NOTE: with `npm start` it can happen that changes to the code don't show up when running the server. Deleting your cache for `localhost` might help.
+
+### Deployment
+- handled in the private GraphIT docker repo
+- but basically:
+  1. create a separate folder for the gui
+    1. add all files, as seen in the official [build-folder](https://github.com/wmde/wikibase-release-pipeline/tree/main/build/WDQS-frontend) of the frontend (you don't need the README)
+    2. customize the Dockerfile of the wikibase-release-pipeline
+       1. use the same images they use (see the [variables.env](https://github.com/wmde/wikibase-release-pipeline/blob/main/variables.env))
+       2. git clone the fork instead of the official repo (see the [Dockerfile](https://github.com/wmde/wikibase-release-pipeline/blob/main/build/WDQS-frontend/Dockerfile))
+       3. don't checkout that commit (after the git clone)
+   2. inject that image into the docker-compose.yaml, by setting the build option to the gui folder instead of using the pre build image
+   3. adjust as necessary
+- for further reference, see the [wikibase-release-pipeline](https://github.com/wmde/wikibase-release-pipeline/tree/main)
+
+### Changes and Usage
+- TODO
+1. added support for colors for multiple columns
+   1. `?node_w_rgb1 ?rgb1 ?node_w_rgb2 ?rgb2`
+   2. `BIND("F68C13" as ?rgb1)` in Query body
+2. added support for shapes for multiple columns
+   1. works like `?rgb`
+   2. uses visjs shapes: ellipse, circle, database, box, text, circularImage, diamond, dot, star, triangle
+   3. `BIND("star" as ?shape1)`
+3. added support for setting `rgb` and `shape` via comment parameters
+   1. works similar to `#defaultview:Graph`
+   2. use outside (or before) the graph-query
+   3. syntax: `#set:<var_name>;rgb=<hex_code>;shape=<visjs_shape>`
+      1. example: `#set:item;rgb=F68C13;shape=star` for variable `?item`
+      2. evtl: `#?item:rgb=F68C13;shape=star` for variable `?item` (not implemented)
+
+  
+[visjs](https://visjs.org/)
+
+<small>see the official information down below...</small>
+
 # Wikibase Query Service GUI
 
 This repository contains the GUI for the [Wikidata Query Service](https://query.wikidata.org/).

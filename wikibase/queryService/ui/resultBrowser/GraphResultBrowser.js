@@ -57,7 +57,7 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 	 * @param {jQuery} $element target element
 	 */
 	SELF.prototype.draw = function ( $element ) {
-		var $container = $( '<div>' ).height( '100vh' );
+		var $container = $( '<div>' ).height( '100vh' ); // for result
 		// only for embed.html
 		if ( $( '#expand-type-switch' ).length !== 0 ) {
 			$container = $( '<div>' ).height( '100vh' );
@@ -67,7 +67,24 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 				off: 'Outgoing'
 			} );
 		}
-		var data = this._getData();
+
+		// INFO: used to set attributes using comments such as:
+		// #set:item;rgb=F68C13;shape=star
+		var settings = {}; 
+		var $codeLines = document.getElementsByClassName('CodeMirror-line'); // class="CodeMirror-line"
+		for(const line of $codeLines) {
+			if( /(#set:)/g.test(line.outerText) ) {
+				const arr = line.outerText.split( /[:;]/ );
+				var group = {};
+				for ( let i = 2; i < arr.length; i++ ) { // skipt [set,<name>] of array
+					const pair = arr[i].split("=");
+					group[pair[0]] = pair[1];
+				}
+				settings[arr[1]] = group; // set <name> as key
+			}
+		} // settings used in this._getData() to customize the nodes
+
+		var data = this._getData(settings);
 		var network = new vis.Network( $container[0], data, GRAPH_OPTIONS );
 
 		network.on( 'doubleClick', function ( properties ) {
@@ -159,7 +176,7 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 	/**
 	 * @private
 	 */
-	SELF.prototype._getData = function () {
+	SELF.prototype._getData = function (settings) {
 		var nodes = {},
 			edges = {},
 			rows = [],
@@ -167,19 +184,24 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 			node = {},
 			edge = {};
 
+		// function setColorAndShape() { }
+
 		this._iterateResult( function ( field, key, row, rowIndex ) {
 			if ( !field || !field.value ) {
 				return;
 			}
+
+			// TRY: set ?rgb & ?shape as #params -> CodeMirror-code
+
 			if ( format.isEntity( field ) ) {
 				// create node
 				var label = row[key + 'Label'] && row[key + 'Label'].value || field.value,
 					nodeId = field.value;
+
 				node = {
 					id: nodeId,
 					label: label,
 					title: label,
-					shape: "star",
 				};
 				if ( rows[rowIndex] ) { // create new edge
 					edge = {
@@ -208,13 +230,37 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 				node.font = { color: 'black' };
 			}
 
-			if ( key === 'rgb' && format.isColor( field ) ) {
-				node.color = format.getColorForHtml( field );
-				if ( node.shape !== 'dot' && node.shape !== 'image' ) {
-					var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
-					node.font = { color: foreground };
-				}
+			// check if settings info has been provided using a comment
+			if ( key in settings ) {
+				node.shape = settings[key].shape;
+				const colorObj = { type:"literal", value:settings[key].rgb };
+				node.color = format.getColorForHtml( colorObj ); // works
+				handleColorForShape(node, node.shape, field, format);
 			}
+
+			/** NOTE: for 'rgb' & 'shape': 
+			 * bounded color/shape(visjs) will be applied to node before keyword
+			 * i.e: ?var_w_shape ?shape ?var_w_shape2 ?shape2
+			 * then do, e.g. BIND("star" as ?shape) in Query-Body
+			 */
+
+			if ( /(shape\d)/g.test(key) ) {
+				node.shape = field.value;
+			} else if ( key === 'shape' ) { 
+				node.shape = field.value;
+			}
+
+			// Matches to ?rgb and ?rbg<any digit> (e.g ?rgb1)
+			if ( key === 'rgb' || /(rgb\d)/g.test(key) && format.isColor( field ) ) {
+				node.color = format.getColorForHtml( field );
+
+				// get the shape assigned to the group of nodes being processed, e.g. ?item1 ?rgb1 ?shape1
+				const groupNum = key.match(/\d/)[0];
+				const shapeKey = row["shape"+ groupNum].value;
+
+				handleColorForShape(node, shapeKey, field, format);
+			}
+
 
 			if ( key === 'edgeLabel' ) {
 				edge.label = field.value;
@@ -240,6 +286,36 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 		}
 		return true;
 	};
+
+	// Labels inside the shape
+	const inShapes = ['ellipse', 'circle', 'database', 'box', 'text']; // => label inside shape
+	/**
+	 * Sets the font-color according to the nodes shape + styles text-shapes differently
+	 * @param {*} node the created node
+	 * @param {*} shapeKey the shape that the node will have
+	 * @param {*} field the field being processed at the moment
+	 * @param {*} format 
+	 */
+	function handleColorForShape(node, shapeKey, field, format) {
+
+		if (inShapes.includes(shapeKey)) {
+			var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
+			if(shapeKey === 'text') {
+				node.font = { color: foreground, 
+							strokeWidth: 10,
+							strokeColor: node.color,
+							bold: true,
+							};
+			} else {
+				node.font = { color: foreground};
+			}
+		} 
+		// TODO: test for image
+	}
+	// INFO:
+	// outShapes = ['image', 'circularImage', 'diamond', 'dot', 'star', 'hexagon', 'square', 'icon'];
+	// inShapes = ['ellipse', 'circle', 'database', 'box', 'text']; 
+
 
 	return SELF;
 }( jQuery, vis, window, _ ) );

@@ -145,13 +145,13 @@ wikibase.queryService.api.Sparql = ( function ( $ ) {
 	SELF.prototype._query = function ( query, timeout ) {
 		var data = 'query=' + encodeURIComponent( query );
 		if ( timeout ) {
-			data += '&maxQueryTimeMillis=' + timeout;
+			data += '&maxQueryTimeMillis=' + timeout; // + "&origin=*";
 		}
 
 		var self = this,
 			deferred = $.Deferred(),
 			settings = {
-				headers: { Accept: 'application/sparql-results+json' },
+				headers: { Accept: 'application/sparql-results+json'},
 				data: data
 			};
 		function done( data, textStatus, request ) {
