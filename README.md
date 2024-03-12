@@ -37,27 +37,32 @@ Develop with a local wikibase docker setup:
    2. inject that image into the docker-compose.yaml, by setting the build option to the gui folder instead of using the pre build image
    3. adjust as necessary
 - for further reference, see the [wikibase-release-pipeline](https://github.com/wmde/wikibase-release-pipeline/tree/main)
+- for the future:
+  - handle deployment here
+  - build docker image (see above) and push to registry
+  - then simply pull in the docker-compose.yaml of the GraphIT docker instance
 
 ### Changes and Usage
-- TODO
-1. added support for colors for multiple columns
-   1. `?node_w_rgb1 ?rgb1 ?node_w_rgb2 ?rgb2`
-   2. `BIND("F68C13" as ?rgb1)` in Query body
-2. added support for shapes for multiple columns
-   1. works like `?rgb`
-   2. uses visjs shapes: ellipse, circle, database, box, text, circularImage, diamond, dot, star, triangle
-   3. `BIND("star" as ?shape1)`
-3. added support for setting `rgb` and `shape` via comment parameters
-   1. works similar to `#defaultview:Graph`
-   2. use outside (or before) the graph-query
-   3. syntax: `#set:<var_name>;rgb=<hex_code>;shape=<visjs_shape>`
-      1. example: `#set:item;rgb=F68C13;shape=star` for variable `?item`
-      2. evtl: `#?item:rgb=F68C13;shape=star` for variable `?item` (not implemented)
+Added support for **colors** for multiple columns
+- `?node_w_rgb1 ?rgb1 ?node_w_rgb2 ?rgb2`
+- `BIND("F68C13" as ?rgb1)` in Query body
+
+Added support for **shapes** for multiple columns
+- works like `?rgb`
+- uses visjs shapes: ellipse, circle, database, box, text, circularImage, diamond, dot, star, triangle
+- `BIND("star" as ?shape1)`
+
+Added support for setting `rgb` and `shape` via comment parameters
+- works similar to `#defaultview:Graph`
+- use outside (or before) the graph-query
+- syntax: `#set:<var_name>;rgb=<hex_code>;shape=<visjs_shape>`
+  - example: `#set:item;rgb=F68C13;shape=star` for variable `?item`
+  - evtl: `#?item:rgb=F68C13;shape=star` for variable `?item` (not implemented)
 
   
 [visjs](https://visjs.org/)
 
-<small>see the official information down below...</small>
+<small>see the official information down below</small>
 
 # Wikibase Query Service GUI
 

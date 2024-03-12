@@ -5,7 +5,24 @@ wikibase.queryService.RdfNamespaces = {};
 ( function ( $, RdfNamespaces ) {
 	'use strict';
 
+	// PREFIX wd: <https://graphit.ur.de/entity/>
+	// PREFIX wds: <https://graphit.ur.de/entity/statement/>
+	// PREFIX wdv: <https://graphit.ur.de/value/>
+	// PREFIX wdt: <https://graphit.ur.de/prop/direct/>
+	// PREFIX p: <https://graphit.ur.de/prop/>
+	// PREFIX ps: <https://graphit.ur.de/prop/statement/>
+	// PREFIX pq: <https://graphit.ur.de/prop/qualifier/>
+
 	RdfNamespaces.NAMESPACE_SHORTCUTS = {
+		GraphIT: {	
+			wd: 'https://graphit.ur.de/entity/',
+			wds: 'https://graphit.ur.de/entity/statement/',
+			wdv: 'https://graphit.ur.de/value/',
+			wdt: 'https://graphit.ur.de/prop/direct/',
+			p: 'https://graphit.ur.de/prop/',
+			ps: 'https://graphit.ur.de/prop/statement/',
+			pq: 'https://graphit.ur.de/prop/qualifier/',
+		},
 		Wikidata: {
 			wikibase: 'http://wikiba.se/ontology#',
 			wd: 'http://www.wikidata.org/entity/',
@@ -74,16 +91,21 @@ wikibase.queryService.RdfNamespaces = {};
 		return $.extend( p, v );
 	}, {} );
 
+	// RdfNamespaces.STANDARD_PREFIXES = {
+	// 	wd: 'PREFIX wd: <http://www.wikidata.org/entity/>',
+	// 	wdt: 'PREFIX wdt: <http://www.wikidata.org/prop/direct/>',
+	// 	wikibase: 'PREFIX wikibase: <http://wikiba.se/ontology#>',
+	// 	p: 'PREFIX p: <http://www.wikidata.org/prop/>',
+	// 	ps: 'PREFIX ps: <http://www.wikidata.org/prop/statement/>',
+	// 	pq: 'PREFIX pq: <http://www.wikidata.org/prop/qualifier/>',
+	// 	rdfs: 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>',
+	// 	bd: 'PREFIX bd: <http://www.bigdata.com/rdf#>'
+	// };
+	
 	RdfNamespaces.STANDARD_PREFIXES = {
-		wd: 'PREFIX wd: <http://www.wikidata.org/entity/>',
-		wdt: 'PREFIX wdt: <http://www.wikidata.org/prop/direct/>',
-		wikibase: 'PREFIX wikibase: <http://wikiba.se/ontology#>',
-		p: 'PREFIX p: <http://www.wikidata.org/prop/>',
-		ps: 'PREFIX ps: <http://www.wikidata.org/prop/statement/>',
-		pq: 'PREFIX pq: <http://www.wikidata.org/prop/qualifier/>',
-		rdfs: 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>',
-		bd: 'PREFIX bd: <http://www.bigdata.com/rdf#>'
-	};
+		wd: 'PREFIX wd: <https://graphit.ur.de/entity/>',
+		wdt: 'PREFIX wdt: <https://graphit.ur.de/prop/direct/>',
+	} // custom
 
 	RdfNamespaces.addPrefixes = function ( prefixes ) {
 		$.extend( RdfNamespaces.ALL_PREFIXES, prefixes );
