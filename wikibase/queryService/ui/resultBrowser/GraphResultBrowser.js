@@ -251,13 +251,21 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 			}
 
 			// Matches to ?rgb and ?rbg<any digit> (e.g ?rgb1)
-			if ( key === 'rgb' || /(rgb\d)/g.test(key) && format.isColor( field ) ) {
+			if ( key === 'rgb' && format.isColor( field ) ) { // original behaviour
+				node.color = format.getColorForHtml( field );
+				if ( node.shape !== 'dot' && node.shape !== 'image' ) {
+					var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
+					node.font = { color: foreground };
+				}
+			} else if ( /(rgb\d)/g.test(key) && format.isColor( field ) ) { // extended behaviour
 				node.color = format.getColorForHtml( field );
 
 				// get the shape assigned to the group of nodes being processed, e.g. ?item1 ?rgb1 ?shape1
 				const groupNum = key.match(/\d/)[0];
-				const shapeKey = row["shape"+ groupNum].value;
-
+				let shapeKey = "ellipse"; // default shape
+				if ( row["shape"+ groupNum] != undefined ) { // check if shape keyword exists
+					shapeKey = row["shape"+ groupNum].value
+				}
 				handleColorForShape(node, shapeKey, field, format);
 			}
 
@@ -296,7 +304,7 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 	 * @param {*} field the field being processed at the moment
 	 * @param {*} format 
 	 */
-	function handleColorForShape(node, shapeKey, field, format) {
+	function handleColorForShape(node, shapeKey="ellipse", field, format) {
 
 		if (inShapes.includes(shapeKey)) {
 			var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
@@ -306,10 +314,10 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 							strokeColor: node.color,
 							bold: true,
 							};
-			} else {
-				node.font = { color: foreground};
 			}
-		} 
+		} else {
+			node.font = { color: foreground};
+		}
 		// TODO: test for image
 	}
 	// INFO:
