@@ -117,16 +117,25 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 			return;
 		}
 
-		// rm all label-cells from the column section, bc. table will merge item/label
-		// TODO: handle case, where ?...Label does not exists
+
+		// "Merges" columns that are pairs (e.g. item & itemLabel) -> only show 1
 		var cols = [];
-		data.head.vars.forEach(str => {
-			if(!/(Label)/.test(str)) {
-				cols.push(str)
+		var header = data.head.vars;
+		header.forEach(el => {
+			if(/(Label)/.test(el)) { // does a label exists
+				console.log(el)
+				var key = el.match(/.*(?=Label)/)
+				// does it have a pair ?
+				console.log("key", key[0])
+				if(!header.includes(key[0])) { // if no pair -> push 
+					cols.push(el)
+				}
+	 		} else { // no problem, leave as is
+				cols.push(el)
 			} 
 		});
 
-		// this.columns = data.head.vars; 
+		// this.columns = data.head.vars; // shows all columns 
 		this.columns = cols;
 		this.rows = data.results.bindings;
 
@@ -206,6 +215,7 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 			onClickCell: function ( field, value, row, $cell ) {
 				self._selectedCellHighlighted = true;
 				self.selectCell( $cell );
+				console.log("cell", $cell)
 			}
 
 		} );
