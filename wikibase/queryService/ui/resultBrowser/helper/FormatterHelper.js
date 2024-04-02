@@ -28,6 +28,56 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 		'http://www.w3.org/2001/XMLSchema#negativeInteger'
 	];
 
+	// create a learning path quer for the given url
+	// reference: https://graphit.ur.de/wiki/Template:Learning_Path2
+	function getLearningPathQuery (url){
+		var qid = /(Q\d+)/.exec(url)[0]
+		console.log("qid", qid, "from", url)
+		return `
+		#title:Learning path
+		SELECT distinct ?v ?vLabel ?rgb 
+		?link ?linkLabel
+		WHERE {
+		{
+		  { SELECT * WHERE {
+		  { SELECT ?goal ?goalLabel ?topic ?topicLabel WHERE {
+			{
+			BIND (wd:${qid} as ?goal).
+			?goal wdt:P1+ ?topic.
+			} UNION {
+			  VALUES ?topic { wd:${qid} } # we also want to include the root node itself
+			}
+		  }
+		  }
+		  ?topic wdt:P1 ?pre.
+		  BIND (?topic as ?v). # + add all ?pre that are not yet in ?topic   
+		  BIND (?pre as ?link).
+		  bind (if(?v = wd:${qid}, "FBBC74", "FFEDD8") as ?rgb).
+		  }
+		  }
+		  Union
+		  { SELECT * WHERE {
+		  { SELECT ?topic ?topicLabel ?goal ?goalLabel WHERE {
+			{
+			  BIND (wd:${qid} as ?topic).
+			  ?goal wdt:P1+ ?topic. 
+			} UNION {
+			  VALUES ?topic { wd:${qid} } # we also want to include the root node itself
+			}
+		  }
+		  }
+		  ?post wdt:P1 ?topic.
+		  BIND (?post as ?v).
+		  BIND (?topic as ?link).
+		  bind ("F68C13" as ?rgb).
+		  }
+		  }
+		  }
+		  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+	
+		}`
+	}
+
 	/**
 	 * Formatting helper provides methods useful for formatting results
 	 *
@@ -89,6 +139,7 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 			value = $.extend( {
 				label: self._getLabel( row, key )
 			}, value );
+			// console.log("v", value);
 			$result.prepend( $( '<div>' ).append( self.formatValue( value, key, embed ) ) );
 		} );
 
@@ -133,6 +184,7 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 	 * @param {boolean} [embed] media files
 	 * @return {jQuery} element
 	 */
+	// NOTE: here
 	SELF.prototype.formatValue = function ( data, title, embed ) {
 		var value = data.value,
 			$html = $( '<span>' );
@@ -178,7 +230,9 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 					if ( this.isEntityUri( value ) ) {
 						$html.prepend( this.createExploreButton( value ), ' ' );
 					}
+					// console.log("obj", value) // value = link to obj
 				}
+
 				break;
 			case DATATYPE_DATETIME:
 				if ( !title ) {
@@ -204,8 +258,9 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 				} // jshint ignore:line
 
 			// eslint-ignore-line no-fallthrough
-			default:
+			default: // label to an object = value
 				var $label = $( '<span>' ).text( value );
+				console.log("label", value)
 				if ( data['xml:lang'] ) {
 					$label.attr( 'title', title + ': ' + value + '@' + data['xml:lang'] );
 				} else {
@@ -286,7 +341,8 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 		var $button = $( '<a>' )
 			.attr( {
 				href: url,
-				title: 'Explore item', // TODO i18n
+				title: 'Show learning path',
+				// title: 'Explore item', // TODO i18n
 				class: 'explore glyphicon glyphicon-search',
 				tabindex: '-1',
 				'aria-hidden': 'true'
@@ -294,7 +350,7 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 		$button.click( $.proxy( this.handleExploreItem, this ) );
 
 		return $button;
-	};
+	}; // NOTE: title: "...", changes tooltip for explore btn
 
 	/**
 	 * Checks whether given url is commons resource URL
@@ -433,12 +489,74 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 	};
 
 	/**
-	 * Handler for explore links
+	 * Uses the explore btn to open the item-link in a new tab (unofficial)
 	 */
-	var offsetCounter = 100;
 	SELF.prototype.handleExploreItem = function ( e ) {
+		// NOTE: should work
+		// e.preventDefault() // prevent opening in same tab
+		// var url = $( e.target ).attr( 'href' );
+		// window.open(url, '_blank').focus()
+
+		// NOTE: test
 		var $currentDialog = $( '#explorer-dialogs .explorer-dialog' ).clone();
 		var url = $( e.target ).attr( 'href' );
+		console.log("expl", url, e.target)
+		var $dialog = $currentDialog.dialog( {
+			uiLibrary: 'bootstrap',
+			autoOpen: false,
+			maxWidth: window.innerWidth,
+			maxHeight: window.innerHeight,
+			minHeight: 220,
+			minWidth: 220,
+			resizable: true,
+			width: window.innerWidth / 2,
+			height: Math.min( window.innerWidth, window.innerHeight ) / 2,
+			drag: function ( e ) {
+				$dialog.children( 'div.explorer-body' ).css( 'visibility', 'hidden' );
+				$( 'body' ).addClass( 'disable-selection' );
+				$dialog.mousemove( function ( event ) {
+					if ( event.pageY < 30 ) {
+						$dialog.css( 'top', '10px' );
+					}
+				} );
+			},
+			dragStop: function ( e ) {
+				$dialog.children( 'div.explorer-body' ).css( 'visibility', 'visible' );
+				$( 'body' ).removeClass( 'disable-selection' );
+			},
+			resize: function ( e ) {
+				$dialog.children( 'div.explorer-body' ).css( 'visibility', 'hidden' );
+				$( 'body' ).addClass( 'disable-selection' );
+			},
+			resizeStop: function ( e ) {
+				$dialog.children( 'div.explorer-body' ).css( 'visibility', 'visible' );
+				$( 'body' ).removeClass( 'disable-selection' );
+			}
+		} );
+		e.preventDefault();
+		var lang = $.i18n && $.i18n().locale || 'en',
+			// ASK: change query to learning path
+			//query = 'SELECT ?item ?itemLabel WHERE { BIND( <' + url + '> as ?item ).	SERVICE wikibase:label { bd:serviceParam wikibase:language "' + lang + '" } }',
+			query = getLearningPathQuery(url),
+			embedUrl = 'embed.html#' + encodeURIComponent( '#defaultView:Graph\n' + query );
+		var top = $( window ).scrollTop() + 200;
+		$dialog.children( 'div.explorer-body' ).html( $( '<iframe frameBorder="0" scrolling="no"></iframe>' ).attr( 'src', embedUrl ) );
+		$dialog.css( 'left', offsetCounter );
+		$dialog.css( 'top', top );
+		$dialog.open();
+		offsetCounter = offsetCounter + 10;
+		return false;
+	}
+
+	/**
+	 * Handler for explore links
+	 */
+	// NOTE: handles the action on the explore button -> official implementeation
+	var offsetCounter = 100;
+	SELF.prototype.handleExploreItemOfficial = function ( e ) {
+		var $currentDialog = $( '#explorer-dialogs .explorer-dialog' ).clone();
+		var url = $( e.target ).attr( 'href' );
+		console.log("expl", url, e.target)
 		var $dialog = $currentDialog.dialog( {
 			uiLibrary: 'bootstrap',
 			autoOpen: false,

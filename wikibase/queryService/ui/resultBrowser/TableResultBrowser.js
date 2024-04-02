@@ -117,7 +117,17 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 			return;
 		}
 
-		this.columns = data.head.vars;
+		// rm all label-cells from the column section, bc. table will merge item/label
+		// TODO: handle case, where ?...Label does not exists
+		var cols = [];
+		data.head.vars.forEach(str => {
+			if(!/(Label)/.test(str)) {
+				cols.push(str)
+			} 
+		});
+
+		// this.columns = data.head.vars; 
+		this.columns = cols;
 		this.rows = data.results.bindings;
 
 		var $wrapper = $( '<table/>' );
@@ -143,7 +153,16 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 				return '';
 			}
 			self.processVisitors( data, this.field );
-			return self._getFormatter().formatValue( data ).html();
+			
+
+			var label = self._getFormatter()._getLabel(row, this.field)
+			if ( label != null ) {
+				data.label = label // append/override to data-obj
+				return self._getFormatter().formatValue( data ).html(); // html el for table
+			} else { // TODO: rm cell from table
+				return self._getFormatter().formatValue( data ).html();
+			}
+			// return self._getFormatter().formatValue( data ).html(); // html el for table
 		};
 
 		var events = {
