@@ -235,7 +235,7 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 				node.shape = settings[key].shape;
 				const colorObj = { type:"literal", value:settings[key].rgb };
 				node.color = format.getColorForHtml( colorObj ); // works
-				handleColorForShape(node, node.shape, field, format);
+				styleShape(node, node.shape, field, format);
 			}
 
 			/** NOTE: for 'rgb' & 'shape': 
@@ -251,22 +251,30 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 			}
 
 			// Matches to ?rgb and ?rbg<any digit> (e.g ?rgb1)
-			if ( key === 'rgb' && format.isColor( field ) ) { // original behaviour
-				node.color = format.getColorForHtml( field );
-				if ( node.shape !== 'dot' && node.shape !== 'image' ) {
-					var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
-					node.font = { color: foreground };
-				}
-			} else if ( /(rgb\d)/g.test(key) && format.isColor( field ) ) { // extended behaviour
+			// if ( key === 'rgb' && format.isColor( field ) ) { // original behaviour
+			// 	node.color = format.getColorForHtml( field );
+			// 	if ( node.shape !== 'dot' && node.shape !== 'image' ) {
+			// 		var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
+			// 		node.font = { color: foreground };
+			// 	}
+			// } else 
+			if ( /(rgb\d*)/g.test(key) && format.isColor( field ) ) { // extended behaviour
 				node.color = format.getColorForHtml( field );
 
-				// get the shape assigned to the group of nodes being processed, e.g. ?item1 ?rgb1 ?shape1
-				const groupNum = key.match(/\d/)[0];
 				let shapeKey = "ellipse"; // default shape
-				if ( row["shape"+ groupNum] != undefined ) { // check if shape keyword exists
-					shapeKey = row["shape"+ groupNum].value
+				let groupNum = "";
+				if ( key === "rgb") { // handle old case,
+					if (row["shape"] !== undefined) { 
+						// only set shapekey if ?shape exists, else keep default
+						shapeKey = row["shape"].value
+					}
+				} else { // handle e.g. key1
+					groupNum = key.match(/\d/)[0];
+					if ( row["shape"+ groupNum] != undefined ) { // check if shape keyword exists
+						shapeKey = row["shape"+ groupNum].value
+					}
 				}
-				handleColorForShape(node, shapeKey, field, format);
+				styleShape(node, shapeKey, field, format);
 			}
 
 
@@ -298,14 +306,14 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 	// Labels inside the shape
 	const inShapes = ['ellipse', 'circle', 'database', 'box', 'text']; // => label inside shape
 	/**
-	 * Sets the font-color according to the nodes shape + styles text-shapes differently
+	 * Styles the shapes, such as setting the font-color according to the nodes shape + styles text-shapes differently
 	 * @param {*} node the created node
 	 * @param {*} shapeKey the shape that the node will have
 	 * @param {*} field the field being processed at the moment
 	 * @param {*} format 
 	 */
-	function handleColorForShape(node, shapeKey="ellipse", field, format) {
-
+	function styleShape(node, shapeKey="ellipse", field, format) {
+		// TODO: change size according to degree + let user set size
 		if (inShapes.includes(shapeKey)) {
 			var foreground = format.calculateLuminance( field.value ) <= 0.5 ? '#FFF' : '#000';
 			if(shapeKey === 'text') {
@@ -313,11 +321,15 @@ wikibase.queryService.ui.resultBrowser.GraphResultBrowser = ( function ( $, vis,
 							strokeWidth: 10,
 							strokeColor: node.color,
 							bold: true,
+							// size: 30 // NOTE: change here for text
 							};
 			}
+			// try set node.font.size for scaling inShapes 
 		} else {
 			node.font = { color: foreground};
+			// node.font.size = 100; // NOTE: change here for inShapes
 		}
+		// node.size = 5; // NOTE change here for outShape
 		// TODO: test for image
 	}
 	// INFO:
