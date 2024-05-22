@@ -77,6 +77,13 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 	SELF.prototype._isStoryPaused = false;
 
 	/**
+	 * (custom) properrty to set the color-axis of a chart
+	 * @property {string[]}
+	 * @private
+	 */
+	SELF.prototype._chartColors = null;
+
+	/**
 	 * Draw browser to the given element
 	 *
 	 * @param {jQuery} $element to draw at
@@ -115,11 +122,24 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 			}
 
 			if ( field && field.value ) {
+				// NOTE: Access to datafields, i.e cells of table
 				rowData[key] = field.value;
 			}
 		} );
 
 		data.push( rowData );
+
+		/** ??: yes/no
+		* Removes all nodes, tahat are at 0,0
+		* chart scatter, kinda works better when they aren't removed */
+		// for(const [_, obj] of Object.entries(data)) {
+		// 	const x = Object.values(obj)[0] // axis-data
+		// 	const y = Object.values(obj)[1]
+		// 	if (x == 0 && y == 0) {
+		// 		data.splice(data.indexOf(obj), 1) // rm 0, 0
+		// 	}
+		// }
+
 		this._data = data;
 	};
 
@@ -127,6 +147,7 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 		this._svg = dimple.newSvg( this._$element[0], '100%', '100%' );
 	};
 
+	// NOTE: here
 	SELF.prototype._createChart = function () {
 
 		// eslint-disable-next-line new-cap -- not our code...
@@ -134,11 +155,33 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 		this._chart.setBounds( 0, 0, '100%', '100%' );
 		this._chart.setMargins( '5%', '5%', '2%', '25%' );
 
-		this._createChartAxis();
 
+		this._createChartAxis(); // rm for test1/2
+
+		// create a color axis, if it a child defined them
+		if (this._chartColors != null) {
+			const colorKey = Object.keys(this._dataColumns)[0] // use the first axis for colors
+			this._chart.addColorAxis(colorKey, this._chartColors); 
+		}
+
+		// console.log("color", JSON.stringify(this._chartColors))
+		// this._chart.addColorAxis("known", this._chartColors); 
+
+		// this._chart.addMeasureAxis("p", "item") // test2
+		// var series = this._chart.addSeries(["interests", "known", "itemLabel"], dimple.plot.pie ); // test2
+		// series.radius = 20;
+
+		// TEST
+		// this._chart.addMeasureAxis("p", "known") // test1
+		// var series = this._chart.addSeries("known", dimple.plot.pie ); // test1
+		// adds to tooltip
+
+		// Works
 		var series = this._chart.addSeries( this._chartSeriesKey, this._getPlotType() );
 		series.addOrderRule( this._chartSeriesKey );
 		series.lineMarkers = true;
+		// series.stacked = true; // stacks bars like [---1---][-2-][3]
+
 
 		if ( this._chartStoryKey ) {
 			this._createChartStory();
@@ -156,7 +199,7 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 			row = this._getRows()[0],
 			formatter = this._getFormatter(),
 			chart = this._chart,
-			axis = [ 'y', 'x' ],
+			axis = ['y', 'x' ], // axis = ['z', 'y', 'x' ],
 			hasSeriesAxis = false;
 
 		$.each( this._getColumns(), function ( i, key ) {
@@ -179,7 +222,18 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 				hasSeriesAxis = true;
 			}
 			if ( formatter.isNumber( row[key] ) ) {
-				chart.addMeasureAxis( axis.pop(), key );
+				var a = chart.addMeasureAxis( axis.pop(), key );
+				// scale the color from green -to-> red (width)
+
+				console.log("color2", JSON.stringify(this._chartColors))
+		// this._chart.addColorAxis("known", this._chartColors); 
+				if(this._chartColors != null) {
+					chart.addColorAxis( key, this._chartColors)
+				}
+				 // ["#9FE586", "#4EB927", "#F0A8AF", "#D12335"]); // overrides the first a
+				// add a color-axis
+				console.log("axis2", a, a._scale)
+				// creates the lines for the axis of coordinate sytem
 			}
 			if ( formatter.isDateTime( row[key] ) ) {
 				chart.addTimeAxis( axis.pop(), key, '%Y-%m-%dT%H:%M:%SZ', '%m-%d-%Y' );

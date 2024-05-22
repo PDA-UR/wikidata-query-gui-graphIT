@@ -128,7 +128,7 @@ wikibase.queryService.ui.ResultView = ( function ( $, download, window ) {
 	 * @property {Object}
 	 * @private
 	 */
-	SELF.prototype._resultBrowsers = {
+	SELF.prototype._resultBrowsers = { // NOTE: here ResultBroswer definitions
 		Table: {
 			icon: 'glyphicon-th-list',
 			label: [ 'wdqs-app-resultbrowser-table', 'Table' ],
@@ -232,6 +232,15 @@ wikibase.queryService.ui.ResultView = ( function ( $, download, window ) {
 			class: 'GraphResultBrowser',
 			object: null,
 			$element: null
+		}, 
+		// Custom Scatter chart
+		ReScatterChart: {
+			icon: 'glyphicon glyphicon-record',
+			label: [ 'wdqs-app-resultbrowser-re-scatter-chart', 'ReScatter chart' ],
+			class: 'ReScatterChartResultBrowser',
+			object: null,
+			$element: null,
+			supportsSvgDownload: true
 		}
 	};
 
@@ -409,12 +418,14 @@ wikibase.queryService.ui.ResultView = ( function ( $, download, window ) {
 			).replace( /&nbsp;/g, '\xA0' )
 		);
 		$( '.result' ).show();
-
+		
 		$( '#execute-button' ).prop( 'disabled', false );
 		var uri = api.getQueryUri();
 		$( '.queryUri' ).attr( 'href', uri );
 		$( '.rawGraphsUri' ).attr( 'href', RAWGRAPHS_BASE_URL + uri );
 
+
+		// NOTE: here creates and uses a ResultBroswer
 		var defaultBrowser = this._createResultBrowsers( api.getResultRawData() );
 		this._drawResult( defaultBrowser );
 		this._selectedResultBrowser = null;
@@ -442,9 +453,9 @@ wikibase.queryService.ui.ResultView = ( function ( $, download, window ) {
 			this._track( 'result.browser.default' );
 		}
 
-		// instantiate
-		$.each( this._resultBrowsers, function ( key, b ) {
-			var instance = new wikibase.queryService.ui.resultBrowser[b.class]();
+		// instantiate (all result browsers)
+		$.each( this._resultBrowsers, function ( key, b ) { // e.g. Graph: { icon:, class: ...}
+			var instance = new wikibase.queryService.ui.resultBrowser[b.class](); // NOTE: issue here with UnScattter
 			instance.setSparqlApi( self._sparqlApi );
 
 			if ( browserOptions.defaultName === key ) {
