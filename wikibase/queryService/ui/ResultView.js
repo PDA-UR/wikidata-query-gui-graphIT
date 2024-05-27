@@ -234,10 +234,10 @@ wikibase.queryService.ui.ResultView = ( function ( $, download, window ) {
 			$element: null
 		}, 
 		// Custom Scatter chart
-		ReScatterChart: {
+		SwarmScatterChart: {
 			icon: 'glyphicon glyphicon-record',
-			label: [ 'wdqs-app-resultbrowser-re-scatter-chart', 'ReScatter chart' ],
-			class: 'ReScatterChartResultBrowser',
+			label: [ 'wdqs-app-resultbrowser-swarm-scatter-chart', 'Swarm Scatter' ],
+			class: 'SwarmScatterChartResultBrowser',
 			object: null,
 			$element: null,
 			supportsSvgDownload: true

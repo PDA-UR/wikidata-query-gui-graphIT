@@ -62,7 +62,16 @@ Added support for setting `rgb` and `shape` via comment parameters
   
 [visjs](https://visjs.org/)
 
+## Custom Charts
+
+### Swarm Scatter Chart
+A chart that takes the stacked points of a scatter chart and rearanges them in a circular pattern, to show the otherwise hidden points.
+- set as default view using: `#defaultView:SwarmScatterChart` in the SPARQL query or select in the dropdown.
+
+
 <small>see the official information down below</small>
+
+---
 
 # Wikibase Query Service GUI
 
