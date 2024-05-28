@@ -47,6 +47,7 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 		var self = this;
 
 		var chart = this._chart.draw( duration, noDataChange );
+		console.log("created chart", chart)
 
 		// Rearrange the data
 		var circles = self._svg.selectAll('.dimple-series-0');
@@ -109,19 +110,27 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 
 	}
 
-
 	/**
 	 * (Custom)
 	 * Arrange stacked nodes.
-	 * 	-  2 nodes are arranged next to each other.
-	 * 	- >2 nodes are arranged in a layered circle.
+	 * 	- 2  nodes are arranged next to each other.
+	 * 	- 2+ nodes are arranged in a layered circle.
+	 *  Every layer has a default amount of nodes (=nodesPerLayer):
+	 * 		-> currently set to 6
+	 *  	If a layer is full a new one will be created. BUT...
+	 *  A layer needs to contain a minimum amount of notes to be created (=nodeOverflow):
+	 * 		If there are less nodes left, they will be "squished" into the current layer.
+	 * 		If there are more nodes left, a new layer will be created.
+	 * 		-> currently set to 3, as 2 aren't really recognizable as a circle by themselfs
+	 *  Nodes at the diagrams origin get styled differently.
 	 * @param {*} stack 
 	 * @param {*} self 
 	 */
 	SELF.prototype._arrangeStack = function(stack, self) {
 
-		const count = stack.length
-		let rest = count // init
+		// init
+		const count = stack.length;
+		let rest = count;
 
 		if(count == 1) {
 			return; // Don't arrange single nodes, i.e. not stacks
@@ -138,22 +147,23 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 		const originY = coordSystem.getBBox().y
 		const offsetY = coordSystem.getBBox().height + originY // calculate OriginY from svg height
 		
-		let layerIdx = 1;
-		let currentLayer = 1; // = middle
+		// Init the middle of the circle
+		let layerIdx = 0;
+		let currentLayer = 1;
 
 		// console.log("REARRANGE", count, "NODES");
 
-		const nodesPerLayer = radius + 1; // how many nodes to usually put into a layer
-		let nodeOverflow = 3; // how many nodes to at least have in a layer
-		let threshold = (nodesPerLayer * (currentLayer)) + nodeOverflow;
+		const nodesPerLayer = 6; // how many nodes to usually put into a layer
+		let nodeOverflow = 3; // how many nodes to at least have in a layer (i.e. have at least 3 nodes in a layer so a cirlce is recognizable)
+		let threshold = (nodesPerLayer * (currentLayer)) + nodeOverflow; // how many nodes before a new layer is created
 
 		stack.forEach((node, idx) => {
 
 			/** Skip arrangement for nodes at origin and gray them out */
 			if (Math.round(parseInt(origX)) == Math.round(parseInt(originX)) 
 				&& Math.round(parseInt(origY)) == Math.round(parseInt(offsetY)) ) {	
-				d3.select(node).attr("style", "fill: rgb(196,196,196); stroke: rgb(255,255,255); fill-opacity:0.1; ");
-				return; 
+				d3.select(node).attr("style", "fill: rgb(196,196,196); stroke: rgb(196,196,196); fill-opacity:0.5; ");
+				// return; 
 			}
 
 
@@ -172,43 +182,36 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 					.attr("cx", x );
 				
 			} else {
-				/** Arrange the nodes in a circle around a center node */
-				let offset = radius*2
-				let nodeCount = nodesPerLayer * (currentLayer) // + nodeOverflow; // skip first node/layer == middle
+				/** Arrange the nodes in a circle around a center node 
+				 *  For the math of a 1 layered circle arrangment see answers to: https://stackoverflow.com/q/5300938 
+				*/
+
+				let offset = radius*2; // diameter
+				let nodeCount = nodesPerLayer * (currentLayer); // + nodeOverflow; // skip first node/layer == middle
 
 				/** Skip the first node -> it's the center */
 				if(idx == 0) {
-					offset = 0 // center node
-					layerIdx = 0; // reset to zero bc. of iterative ++ at bottom
+					offset = 0 // center node in the middle
 					rest--; 
 
-					// console.log(`[center]: ${idx} => in layer 0, at position ${layerIdx}`)
+					console.log(`${idx} => in layer 0, at position ${layerIdx} = [center]`)
 				} else {
+					/** Arrange the rest of the nodes */
 
 					// Check if there are enough nodes to warrant a new layer
-					if ( rest > threshold ) {
+					if ( rest >= threshold ) {
 
-						// After the last node in a layer has been created, init the next layer
+						// create a new layer, if layerIdx maxed out the nodeCount
 						if (layerIdx > nodeCount) {
-
-							// create a new layer
-							currentLayer++;
 							rest -= layerIdx;
-							rest++; // HACK: otherwise eats a node
+							rest++; // so it doesn't skip the first node
+							currentLayer++;
 							layerIdx = 1;
 
-							// recalculations for the current node
+							// recalculate nodeCount and threshold for the node currently processed
 							nodeCount = (nodesPerLayer * (currentLayer))
 							threshold = nodeCount + nodeOverflow;
-
-							/** Logging
-							console.log("next layer needs at least", nodeOverflow, "nodes to be filled: HAS", rest)
-							if (rest < threshold) {
-								console.log("not enough nodes to create another new layer")
-								console.log("will create the last layer for the remaining",rest, "nodes")
-							} else {
-								console.log("will create the new layer for max. of", nodeCount, "nodes")
-							} */
+							// console.log("will create the new layer of max.", nodeCount, "nodes for", rest)
 						}
 					} 
 					
@@ -217,20 +220,20 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 						nodeCount = rest;
 					}
 					
-					offset = offset * (currentLayer); // bc. starts at 1
+					offset = offset * (currentLayer);
 					// console.log(`${idx} => in layer ${currentLayer}, at position ${layerIdx}, with offset ${offset}`)
 				}
 
-				let angle = (2 * Math.PI / (nodeCount)) * (layerIdx)
+				let angle = (2 * Math.PI / (nodeCount)) * (layerIdx);
 				let x =  parseFloat(origX) + ( offset * Math.cos(angle) ); 
 				let y =  parseFloat(origY) + ( offset * Math.sin(angle) );
 
-				// place nodes
+				// place nodes (with animation)
 				d3.select(node).transition().duration(1000)
 					.attr("cx", x )
 					.attr("cy", y );
 
-				layerIdx++
+				layerIdx++; 
 				// console.log(idx, "with offset of", offset)
 			}
 		});

@@ -67,6 +67,9 @@ Added support for setting `rgb` and `shape` via comment parameters
 ### Swarm Scatter Chart
 A chart that takes the stacked points of a scatter chart and rearanges them in a circular pattern, to show the otherwise hidden points.
 - set as default view using: `#defaultView:SwarmScatterChart` in the SPARQL query or select in the dropdown.
+- NOTE: load the file in both index.html and embed.html using the `<script>`-tag
+
+
 
 
 <small>see the official information down below</small>
