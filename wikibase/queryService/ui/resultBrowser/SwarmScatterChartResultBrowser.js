@@ -22,8 +22,6 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 	 */
 	function SELF() {
 		this._dataColumns = {};
-		this._chartColors = ["#9FE586", "#F0A8AF"];
-		console.log("hi", this._dataColumns, this._chartColors)
 	}
 
 	SELF.prototype = new PARENT();
@@ -32,27 +30,16 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 		return dimple.plot.scatter;
 	};
 
-	/**
-	 * (custom) 
-	 * To be used for the dimple color axis (see: https://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.chart#addColorAxis)
-	 * only works on 1 axis ( will just take the first defined one (x-axis) )
-	 * @returns {string[]} an array of colors to distribute acros an axis
-	 */
-	SELF.prototype._getChartColors = function () {
-		return ["#9FE586", "#F0A8AF"]
-	}
-
 	// Override the Parent-Method for drawing
 	SELF.prototype._drawChart = function ( duration, noDataChange ) {
 		var self = this;
 
-		var chart = this._chart.draw( duration, noDataChange );
-		console.log("created chart", chart)
+		self._mapCoordinatesToColor(this._chart)
 
-		// Rearrange the data
+		this._chart.draw( duration, noDataChange );
+
 		var circles = self._svg.selectAll('.dimple-series-0');
 		self._staggerStackedPoints(circles, self);
-
 
 		_.delay( function () {
 			self._svg.selectAll( '.dimple-marker,.dimple-marker-back' ).attr( 'r', 2 );
@@ -60,50 +47,86 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 	};
 
 	/**
-	 * (Custom)
-	 * Search for stackes, i.e. nodes at the same coordinates to rearrange
-	 * @param {Array} data -> Array of the svg-dimple poinst: <circle> 
+	 * (custom)
+	 * Assign custom (RGB)colors to the chart data.
+	 * Handeled separately,
+	 * 		as the dimple color axis doesn't work with the legend (see: https://stackoverflow.com/a/33097394)
+	 * 		and assigning the colors when rearranging the nodes, doesn't change the color of the corresponding legend elements.
+	 * 
+	 * @param {*} chart the dimple chart element
+	 */
+	SELF.prototype._mapCoordinatesToColor = function (chart) {
+		
+		// Get the boundaries of the chart coordinate system (actual order doesn't really matter)
+		const xKey = chart.axes[0].measure;
+		const yKey = chart.axes[1].measure;
+
+		let xArr = chart.data.map((point) => { return point[xKey] })
+		let yArr = chart.data.map((point) => { return point[yKey] })
+		let xMax = Math.max(...xArr);
+		let yMax = Math.max(...yArr);
+
+		const labelKey = Object.keys(chart.data[0]).filter(key => /Label/.test(key));
+
+	
+		chart.data.forEach(point => {
+			const x = parseInt(Object.values(point)[0]);
+			const y = parseInt(Object.values(point)[1]);
+			
+			// MAP r,g values between 0 and 255 (see: https://stackoverflow.com/a/10756409)
+			// & subtract from 255 to get lighter colors for smaller values
+			const r = 255 - (x * 255 / xMax);
+			const g = 255 - (y * 255 / yMax);
+
+			// clamp the values to be between 0 and 255 (see: https://www.geeksforgeeks.org/how-to-limit-a-number-between-a-min-max-value-in-javascript/)
+			const clampR = Math.min(255, Math.max(0, r) );
+			const clampG = Math.min(255, Math.max(0, g) );
+
+			chart.assignColor(point[labelKey], `rgb(${clampR}, ${clampG}, 100)`)
+		});
+
+	}
+
+	/**
+	 * (custom)
+	 * Search for stackes, i.e. nodes at the same coordinates to rearrange.
+	 * 
+	 * @param {Array} data -> Array of the svg-dimple points: <circle> 
 	 * @param {*} self 
 	 */
 	SELF.prototype._staggerStackedPoints = function (data, self) {
 
-		let circles = data[0]
+		let circles = data[0];
 
-		let stacks = []; // the references to the svg-elements that are stacks
-		let checked_coords = []; // the coordinates that have already been checked for duplicates
-		// [ [<circle>, <circle>], [...]] + [[x,y], [x,y]]
+		let stacks = [];
+		let checked_coords = []; 
 		let i = 0;
 		
 		circles.forEach(current => {
 			var x = d3.select(current).attr("cx");
 			var y = d3.select(current).attr("cy");
-			// var id = d3.select(current).attr("id");
 
-			// check if the coordinates have already been checked
-			if(checked_coords.every((coords, idx) => {
-				return coords.toString() != [x, y].toString()
+			if(checked_coords.every(coords => {
+				return coords.toString() != [x, y].toString();
 			})) {
-				// if not -> check the array for stacks at the coordinates
-				checked_coords.push([x,y])
-				stacks.push([]) // create new dimension
+		
+				checked_coords.push([x,y]);
+				stacks.push([]);
 				
 				// check for duplicates
 				circles.forEach(next => {
 					var nX = d3.select(next).attr("cx");
 					var nY = d3.select(next).attr("cy");
-					// var nId = d3.select(next).attr("id");
 					
 					if (x === nX && y === nY ) {
-						// found duplicate
-						stacks[i].push(next)
+						stacks[i].push(next);
 					}
 				})
 				i++;
 			} 
 
-		})
+		});
 
-		// REARRANGE THE STACKS
 		stacks.forEach(stack => {
 			this._arrangeStack(stack, self)
 		})
@@ -111,73 +134,56 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 	}
 
 	/**
-	 * (Custom)
-	 * Arrange stacked nodes.
-	 * 	- 2  nodes are arranged next to each other.
-	 * 	- 2+ nodes are arranged in a layered circle.
-	 *  Every layer has a default amount of nodes (=nodesPerLayer):
-	 * 		-> currently set to 6
-	 *  	If a layer is full a new one will be created. BUT...
-	 *  A layer needs to contain a minimum amount of notes to be created (=nodeOverflow):
+	 * (custom)
+	 * Arrange stacked nodes (in a layered circle).
+	 * Every layer has a default amount of nodes (=nodesPerLayer).
+	 * A layer needs to contain a minimum amount of notes to be created (=nodeOverflow):
 	 * 		If there are less nodes left, they will be "squished" into the current layer.
-	 * 		If there are more nodes left, a new layer will be created.
-	 * 		-> currently set to 3, as 2 aren't really recognizable as a circle by themselfs
-	 *  Nodes at the diagrams origin get styled differently.
-	 * @param {*} stack 
+	 * 		(Currently set to 3, as 2 aren't really recognizable as a circle by themselves.)
+	 * 
+	 * @param {Array} stack Array of <circle> elements
 	 * @param {*} self 
 	 */
 	SELF.prototype._arrangeStack = function(stack, self) {
 
-		// init
 		const count = stack.length;
 		let rest = count;
 
 		if(count == 1) {
-			return; // Don't arrange single nodes, i.e. not stacks
+			return;
 		}
 
-		// Get the original position of the stacks
 		const radius = parseFloat(d3.select(stack[0]).attr("r")); // same for all nodes
-		const origX = d3.select(stack[0]).attr("cx");
-		const origY = d3.select(stack[0]).attr("cy");
+		const stackX = d3.select(stack[0]).attr("cx");
+		const stackY = d3.select(stack[0]).attr("cy");
 
 		// Get the origin of the chart (0,0)
-		const coordSystem = self._svg.select(".dimple-gridlines-group")[0][0] // = axis lines
-		const originX = coordSystem.getBBox().x 
-		const originY = coordSystem.getBBox().y
-		const offsetY = coordSystem.getBBox().height + originY // calculate OriginY from svg height
+		const coordSystem = self._svg.select(".dimple-gridlines-group")[0][0]; // = axis lines
+		const originX = coordSystem.getBBox().x; 
+		const originY = coordSystem.getBBox().y;
+		const offsetY = coordSystem.getBBox().height + originY; // calculate OriginY from svg height
 		
 		// Init the middle of the circle
 		let layerIdx = 0;
 		let currentLayer = 1;
 
-		// console.log("REARRANGE", count, "NODES");
-
-		const nodesPerLayer = 6; // how many nodes to usually put into a layer
-		let nodeOverflow = 3; // how many nodes to at least have in a layer (i.e. have at least 3 nodes in a layer so a cirlce is recognizable)
-		let threshold = (nodesPerLayer * (currentLayer)) + nodeOverflow; // how many nodes before a new layer is created
+		const nodesPerLayer = 6;
+		let nodeOverflow = 3;
+		let threshold = (nodesPerLayer * (currentLayer)) + nodeOverflow; 
 
 		stack.forEach((node, idx) => {
 
 			/** Skip arrangement for nodes at origin and gray them out */
-			if (Math.round(parseInt(origX)) == Math.round(parseInt(originX)) 
-				&& Math.round(parseInt(origY)) == Math.round(parseInt(offsetY)) ) {	
-				d3.select(node).attr("style", "fill: rgb(196,196,196); stroke: rgb(196,196,196); fill-opacity:0.5; ");
+			if (Math.round(parseInt(stackX)) == Math.round(parseInt(originX)) 
+				&& Math.round(parseInt(stackY)) == Math.round(parseInt(offsetY)) ) {	
+				// d3.select(node).attr("style", "fill: rgb(196,196,196); stroke: rgb(196,196,196); fill-opacity:0.5; ");
+				d3.select(node).attr("style", "fill: rgb(196,196,196); fill-opacity:0.5; ");
 				// return; 
 			}
 
 
-			/** Arrange the 2 nodes next to each other, like: (1)·(2) (· = original x,y) */
-			if(count == 2) { 
-
-				let offset = radius + 1;
-				let x = 0;
-				if(idx == 0) {
-					x = Math.round(parseFloat(origX) - offset);
-				} else {
-					x = Math.round(parseFloat(origX) + offset);
-				}
-				// place nodes next to each other
+			if(count == 2) {
+				const x = this._arrangeTwoNodes(radius, idx, stackX);
 				d3.select(node).transition().duration(1000)
 					.attr("cx", x );
 				
@@ -186,32 +192,24 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 				 *  For the math of a 1 layered circle arrangment see answers to: https://stackoverflow.com/q/5300938 
 				*/
 
-				let offset = radius*2; // diameter
-				let nodeCount = nodesPerLayer * (currentLayer); // + nodeOverflow; // skip first node/layer == middle
+				let offset = radius * 2;
+				let nodeCount = nodesPerLayer * (currentLayer);
 
-				/** Skip the first node -> it's the center */
-				if(idx == 0) {
-					offset = 0 // center node in the middle
+				if(idx == 0) { // Handle the center node
+					offset = 0;
 					rest--; 
-
-					console.log(`${idx} => in layer 0, at position ${layerIdx} = [center]`)
 				} else {
-					/** Arrange the rest of the nodes */
-
 					// Check if there are enough nodes to warrant a new layer
 					if ( rest >= threshold ) {
 
-						// create a new layer, if layerIdx maxed out the nodeCount
 						if (layerIdx > nodeCount) {
 							rest -= layerIdx;
-							rest++; // so it doesn't skip the first node
+							rest++; // so it doesn't skip a node
 							currentLayer++;
 							layerIdx = 1;
 
-							// recalculate nodeCount and threshold for the node currently processed
-							nodeCount = (nodesPerLayer * (currentLayer))
+							nodeCount = (nodesPerLayer * (currentLayer));
 							threshold = nodeCount + nodeOverflow;
-							// console.log("will create the new layer of max.", nodeCount, "nodes for", rest)
 						}
 					} 
 					
@@ -221,24 +219,39 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 					}
 					
 					offset = offset * (currentLayer);
-					// console.log(`${idx} => in layer ${currentLayer}, at position ${layerIdx}, with offset ${offset}`)
 				}
 
 				let angle = (2 * Math.PI / (nodeCount)) * (layerIdx);
-				let x =  parseFloat(origX) + ( offset * Math.cos(angle) ); 
-				let y =  parseFloat(origY) + ( offset * Math.sin(angle) );
+				let x =  parseFloat(stackX) + ( offset * Math.cos(angle) ); 
+				let y =  parseFloat(stackY) + ( offset * Math.sin(angle) );
 
-				// place nodes (with animation)
 				d3.select(node).transition().duration(1000)
 					.attr("cx", x )
 					.attr("cy", y );
 
 				layerIdx++; 
-				// console.log(idx, "with offset of", offset)
 			}
 		});
 	}
-	
+
+	/**
+	 * Arrange 2 nodes next to each other, like: (1)·(2) (· = original x,y)
+	 * 
+	 * @param {number} radius of the nodes
+	 * @param {number} idx of the currently processed node
+	 * @param {string} stackX the x coordinate of the stack
+	 * @returns new x coordinate of the node
+	 */
+	SELF.prototype._arrangeTwoNodes = function (radius, idx, stackX) {
+		let offset = radius + 1;
+		let x = 0;
+		if(idx == 0) {
+			x = Math.round(parseFloat(stackX) - offset);
+		} else {
+			x = Math.round(parseFloat(stackX) + offset);
+		}
+		return x;
+	}	
 
 	return SELF;
 }( dimple ) );
