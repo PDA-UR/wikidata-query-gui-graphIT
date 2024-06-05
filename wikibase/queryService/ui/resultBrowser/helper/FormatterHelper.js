@@ -34,6 +34,8 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 		var qid = /(Q\d+)/.exec(url)[0]
 		console.log("qid", qid, "from", url)
 		return `
+		PREFIX wd: <https://graphit.ur.de/entity/>
+        PREFIX wdt: <https://graphit.ur.de/prop/direct/>
 		#title:Learning path
 		SELECT distinct ?v ?vLabel ?rgb 
 		?link ?linkLabel
@@ -535,8 +537,6 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 		} );
 		e.preventDefault();
 		var lang = $.i18n && $.i18n().locale || 'en',
-			// ASK: change query to learning path
-			//query = 'SELECT ?item ?itemLabel WHERE { BIND( <' + url + '> as ?item ).	SERVICE wikibase:label { bd:serviceParam wikibase:language "' + lang + '" } }',
 			query = getLearningPathQuery(url),
 			embedUrl = 'embed.html#' + encodeURIComponent( '#defaultView:Graph\n' + query );
 		var top = $( window ).scrollTop() + 200;
@@ -551,7 +551,7 @@ wikibase.queryService.ui.resultBrowser.helper.FormatterHelper = ( function ( $, 
 	/**
 	 * Handler for explore links
 	 */
-	// NOTE: handles the action on the explore button -> official implementeation
+	// NOTE: handles the action on the explore button -> official implementation
 	var offsetCounter = 100;
 	SELF.prototype.handleExploreItemOfficial = function ( e ) {
 		var $currentDialog = $( '#explorer-dialogs .explorer-dialog' ).clone();
