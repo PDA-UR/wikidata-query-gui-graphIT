@@ -49,9 +49,9 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 	/**
 	 * (custom)
 	 * Assign custom (RGB)colors to the chart data.
-	 * Handeled separately,
-	 * 		as the dimple color axis doesn't work with the legend (see: https://stackoverflow.com/a/33097394)
-	 * 		and assigning the colors when rearranging the nodes, doesn't change the color of the corresponding legend elements.
+	 * Handled separately,
+	 * 	as the dimple color axis doesn't work with the legend (see: https://stackoverflow.com/a/33097394)
+	 * 	and assigning the colors when rearranging the nodes, doesn't change the color of the corresponding legend elements.
 	 * 
 	 * @param {*} chart the dimple chart element
 	 */
@@ -73,18 +73,17 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 			const x = parseInt(Object.values(point)[0]);
 			const y = parseInt(Object.values(point)[1]);
 			
-			// MAP r,g values between 0 and 255 (see: https://stackoverflow.com/a/10756409)
-			// & subtract from 255 to get lighter colors for smaller values
-			const r = 255 - (x * 255 / xMax);
-			const g = 255 - (y * 255 / yMax);
+			// MAP r,g values between 0 and 100 (see: https://stackoverflow.com/a/10756409)
+			// & subtract from 220 to get lighter colors for smaller values
+			const r = 220 - (x * 100 / xMax);
+			const g = 220 - (y * 100 / yMax);
 
 			// clamp the values to be between 0 and 255 (see: https://www.geeksforgeeks.org/how-to-limit-a-number-between-a-min-max-value-in-javascript/)
 			const clampR = Math.min(255, Math.max(0, r) );
 			const clampG = Math.min(255, Math.max(0, g) );
 
-			chart.assignColor(point[labelKey], `rgb(${clampR}, ${clampG}, 100)`)
+			chart.assignColor(point[labelKey], `rgb(${clampG}, ${clampR}, 100)`)
 		});
-
 	}
 
 	/**
@@ -178,7 +177,7 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 				&& Math.round(parseInt(stackY)) == Math.round(parseInt(offsetY)) ) {	
 				// d3.select(node).attr("style", "fill: rgb(196,196,196); stroke: rgb(196,196,196); fill-opacity:0.5; ");
 				d3.select(node).attr("style", "fill: rgb(196,196,196); fill-opacity:0.5; ");
-				// return; 
+				return; 
 			}
 
 
@@ -189,7 +188,7 @@ wikibase.queryService.ui.resultBrowser.SwarmScatterChartResultBrowser = ( functi
 				
 			} else {
 				/** Arrange the nodes in a circle around a center node 
-				 *  For the math of a 1 layered circle arrangment see answers to: https://stackoverflow.com/q/5300938 
+				 *  For the math of a 1 layered circle arrangement see answers to: https://stackoverflow.com/q/5300938 
 				*/
 
 				let offset = radius * 2;

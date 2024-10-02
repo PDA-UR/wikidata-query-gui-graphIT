@@ -134,7 +134,7 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 		// eslint-disable-next-line new-cap -- not our code...
 		this._chart = new dimple.chart( this._svg, this._data );
 		this._chart.setBounds( 0, 0, '100%', '100%' );
-		this._chart.setMargins( '5%', '5%', '2%', '25%' );
+		this._chart.setMargins( '5%', '3%', '3%', '35%' );
 
 		this._createChartAxis();
 
@@ -147,7 +147,7 @@ wikibase.queryService.ui.resultBrowser.AbstractDimpleChartResultBrowser = ( func
 			this._createChartStory();
 		}
 
-		this._chartLegend = this._chart.addLegend( '1%', '85%', '100%', '15%' );
+		this._chartLegend = this._chart.addLegend( '1%', '70%', '100%', '100%' );
 
 	};
 
