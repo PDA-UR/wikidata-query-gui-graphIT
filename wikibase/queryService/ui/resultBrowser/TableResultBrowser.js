@@ -123,10 +123,10 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 		var header = data.head.vars;
 		header.forEach(el => {
 			if(/(Label)/.test(el)) { // does a label exists
-				console.log(el)
+				// console.log(el)
 				var key = el.match(/.*(?=Label)/)
 				// does it have a pair ?
-				console.log("key", key[0])
+				// console.log("key", key[0])
 				if(!header.includes(key[0])) { // if no pair -> push 
 					cols.push(el)
 				}
@@ -215,7 +215,6 @@ wikibase.queryService.ui.resultBrowser.TableResultBrowser = ( function ( $, wind
 			onClickCell: function ( field, value, row, $cell ) {
 				self._selectedCellHighlighted = true;
 				self.selectCell( $cell );
-				console.log("cell", $cell)
 			}
 
 		} );

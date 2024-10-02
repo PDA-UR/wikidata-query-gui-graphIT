@@ -58,6 +58,7 @@ Added support for setting `rgb` and `shape` via comment parameters
 - syntax: `#set:<var_name>;rgb=<hex_code>;shape=<visjs_shape>`
   - example: `#set:item;rgb=F68C13;shape=star` for variable `?item`
   - evtl: `#?item:rgb=F68C13;shape=star` for variable `?item` (not implemented)
+  - might cause some issues with unstyled items
 
   
 [visjs](https://visjs.org/)
@@ -65,11 +66,18 @@ Added support for setting `rgb` and `shape` via comment parameters
 ## Custom Charts
 
 ### Swarm Scatter Chart
-A chart that takes the stacked points of a scatter chart and rearanges them in a circular pattern, to show the otherwise hidden points.
+A chart that takes the stacked points of a scatter chart and rearranges them in a circular pattern, to show the otherwise hidden points.
 - set as default view using: `#defaultView:SwarmScatterChart` in the SPARQL query or select in the dropdown.
-- NOTE: load the file in both index.html and embed.html using the `<script>`-tag
+- NOTE: to create a new graph, such as this load the file with the code in both index.html and embed.html using the `<script>`-tag
 
 
+## Changes to Default Charts
+- 🔍-icon in the table-view:
+  - Now opens a SPARQL query showing the learning path to the item 
+  - only works in the live instance as setting the GraphIT-prefixes is necessary for the query
+- ?var and ?varLabel now merges into a single cell if they are both queried
+  - i.e.: `SELECT ?item ?itemLabel {...}` returns the item's label as hyperlink to the wiki page
+- (currently abandoned) specified columns are turned into working checkboxes to mark items as "interested in" and "completed" from inside a query
 
 
 <small>see the official information down below</small>
