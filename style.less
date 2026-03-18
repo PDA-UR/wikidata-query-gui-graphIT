@@ -4,6 +4,8 @@
 // For a list of available tokens,
 // see: https://doc.wikimedia.org/codex/latest/design-tokens/overview.html
 @import ( reference ) 'node_modules/@wikimedia/codex-design-tokens/theme-wikimedia-ui.less';
+@import ( reference ) './css-icon.less';
+@import ( less ) 'node_modules/@wikimedia/codex/dist/codex.style.css';
 
 // == Colors =================================================================
 // Codex “WikimediaUI” color palette
@@ -188,6 +190,16 @@ a.disabled {
 	}
 }
 
+.cdx-css-icon {
+	&--play {
+		.cdx-mixin-css-icon( @cdx-icon-play, @param-fill-color: @color-inverted );
+	}
+
+	&--stop {
+		.cdx-mixin-css-icon( @cdx-icon-stop, @param-fill-color: @color-inverted );
+	}
+}
+
 .form-control {
 	border-radius: @border-radius-base;
 }
@@ -256,27 +268,6 @@ a.disabled {
 .error-character {
 	background: @background-color-error;
 	color: @color-inverted;
-}
-
-#execute-button {
-	background: @background-color-progressive;
-	border-radius: @border-radius-base;
-	border: 2px @border-style-base @border-color-progressive;
-	box-shadow: none;
-	margin-bottom: 5px;
-	padding-bottom: 7px;
-	padding-top: 7px;
-	width: 46px;
-
-	&:hover {
-		background: @background-color-progressive--hover;
-		border-color: @border-color-progressive--hover;
-	}
-
-	&:active {
-		background: @background-color-progressive--active;
-		border-color: @border-color-progressive--active;
-	}
 }
 
 #query-result {
@@ -547,12 +538,21 @@ div.shortUrl {
 
 		&-bottom {
 			flex-grow: 0;
-			padding-bottom: 0.2em;
-			padding-top: 1em;
+			padding-bottom: 0.5rem;
+			padding-top: 0.5rem;
 			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 
 			.fa {
 				font-size: 1.8em;
+			}
+
+			.query-action-button {
+				&:first-child {
+					margin-bottom: 0.5rem;
+				}
 			}
 		}
 
@@ -709,8 +709,7 @@ div.shortUrl {
 		.exampleTable {
 			border: @border-base;
 			max-height: 500px;
-			overflow-x: hidden;
-			overflow-y: auto;
+			overflow: hidden auto;
 
 			td {
 				padding: 8px 10px;

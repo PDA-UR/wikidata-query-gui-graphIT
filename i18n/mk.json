@@ -10,6 +10,7 @@
 	"wdqs-app-button-help": "Помош",
 	"wdqs-app-button-run": "Пушти",
 	"wdqs-app-button-run-title": "Изврши го барањето (CTRL + ENTER)",
+	"wdqs-app-button-cancel-title": "Откажи барање (CTRL + ESC)",
 	"wdqs-app-button-clear": "Исчисти",
 	"wdqs-app-button-clear-title": "Исчисти барање",
 	"wdqs-app-button-restore-title": "Поврати претходно барање",
@@ -94,6 +95,7 @@
 	"wdqs-dialog-examples-preview-result": "Преглед на исходот",
 	"wdqs-dialog-key-shortcut-title": "Тастатурни кратенки",
 	"wdqs-dialog-key-shortcut-run-query": "Пушти барање.",
+	"wdqs-dialog-key-shortcut-cancel-query": "Откажете го барањето.",
 	"wdqs-dialog-key-shortcut-esc": "Остави тековно вносно поле.",
 	"wdqs-dialog-key-shortcut-show-shortcut-help": "Покажи помош за тастатурните кратенки на тековната страница.",
 	"wdqs-dialog-key-shortcut-focus-textarea": "Сосредоточи во текстуалното поле на барањето.",
@@ -118,6 +120,7 @@
 	"wdqs-ve-sb-suggestions": "Предлози",
 	"wdqs-ve-sb-other": "Друго",
 	"wdqs-action-query": "Го работам барањето",
+	"wdqs-action-stop-query": "Барањето е откажано",
 	"wdqs-action-render": "Правам испис на исходот",
 	"wdqs-action-error-display": "Не можам да го прикажам исходот",
 	"wdqs-action-timeout": "Достигнато е временското ограничување на барањето",
@@ -133,5 +136,6 @@
 	"wdqs-embed-button-edit-code": "Уреди SPARQL",
 	"wdqs-embed-button-edit-code-title": "Уреди го барањево со SPARQL-уредникот",
 	"wdqs-embed-explorer-button-incoming": "Прикажи дојдовни врски",
-	"wdqs-embed-explorer-button-outgoing": "Прикажи појдовни врски"
+	"wdqs-embed-explorer-button-outgoing": "Прикажи појдовни врски",
+	"wdqs-app-graph-split-banner-content": "Дали вашето барање вклучува предмети кои опишуваат научни статии? Тогаш претстојната поделба на графиконите ќе ве засегне. Дознајте повеќе од <a href=\"https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:SPARQL_query_service/WDQS_backend_update/September_2024_scaling_update\">ова соопшение</a>."
 }

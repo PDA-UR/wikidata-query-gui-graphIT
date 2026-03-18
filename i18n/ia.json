@@ -11,6 +11,7 @@
 	"wdqs-app-button-help": "Adjuta",
 	"wdqs-app-button-run": "Executar",
 	"wdqs-app-button-run-title": "Executar consulta (CTRL + ENTER)",
+	"wdqs-app-button-cancel-title": "Cancellar le consulta (CTRL + ESC)",
 	"wdqs-app-button-clear": "Vacuar",
 	"wdqs-app-button-clear-title": "Rader consulta",
 	"wdqs-app-button-restore-title": "Restaurar consulta anterior",
@@ -95,6 +96,7 @@
 	"wdqs-dialog-examples-preview-result": "Previsualisar resultato",
 	"wdqs-dialog-key-shortcut-title": "Claves accelerator",
 	"wdqs-dialog-key-shortcut-run-query": "Executar consulta.",
+	"wdqs-dialog-key-shortcut-cancel-query": "Cancellar consulta.",
 	"wdqs-dialog-key-shortcut-esc": "Quitar le campo de entrata o area de texto actual.",
 	"wdqs-dialog-key-shortcut-show-shortcut-help": "Monstrar adjuta sur le claves accelerator pro le pagina actual.",
 	"wdqs-dialog-key-shortcut-focus-textarea": "Focalisar sur le area de texto del consulta.",
@@ -119,6 +121,7 @@
 	"wdqs-ve-sb-suggestions": "Suggestiones",
 	"wdqs-ve-sb-other": "Altere",
 	"wdqs-action-query": "Execution del consulta",
+	"wdqs-action-stop-query": "Le consulta ha essite cancellate",
 	"wdqs-action-render": "Rendition del resultato",
 	"wdqs-action-error-display": "Impossibile monstrar resultato",
 	"wdqs-action-timeout": "Le consulta ha expirate",
@@ -134,5 +137,6 @@
 	"wdqs-embed-button-edit-code": "Modificar SPARQL",
 	"wdqs-embed-button-edit-code-title": "Modificar iste consulta con le editor SPARQL",
 	"wdqs-embed-explorer-button-incoming": "Monstrar ligamines entrante",
-	"wdqs-embed-explorer-button-outgoing": "Monstrar ligamines sortiente"
+	"wdqs-embed-explorer-button-outgoing": "Monstrar ligamines sortiente",
+	"wdqs-app-graph-split-banner-content": "Include tu consulta elementos que describe articulos scientific? Le imminente separation del graphicos te concernera. Per favor lege plus sur illo in <a href=\"https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:SPARQL_query_service/WDQS_backend_update/September_2024_scaling_update\">iste annuncio</a>."
 }

@@ -6,7 +6,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 	'use strict';
 
 	var TRACKING_NAMESPACE = 'wikibase.queryService.ui.app.',
-		DEFAULT_QUERY = 'SELECT * WHERE {  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". } } LIMIT 100';
+		DEFAULT_QUERY = 'SELECT * WHERE {  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en". } } LIMIT 100';
 
 	var COOKIE_SHOW_QUERY_HELPER = 'query-helper-show';
 
@@ -29,7 +29,14 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 	 * @param {wikibase.queryService.api.CodeSamples} codeSamplesApi
 	 * @param {wikibase.queryService.api.UrlShortener} shortUrlApi
 	 * @param {string} queryBuilderUrl
-	 * @param {boolean} showBanner
+	 * @param {object|null} banner Banner configuration from the (default or custom) config,
+	 * with the properties (if set):
+	 * @param {string} banner.default Default contents of the banner (HTML),
+	 * before i18n has been loaded.
+	 * @param {string} banner.storageKey Cookie name where to store
+	 * whether the banner was dismissed previously.
+	 * @param {string} banner.i18nKey Name of an i18n message with the banner contents (HTML).
+	 * The message key is also reused as the class attribute of the banner element in the DOM.
 	 */
 	function SELF(
 		$element,
@@ -41,7 +48,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 		codeSamplesApi,
 		shortUrlApi,
 		queryBuilderUrl,
-		showBanner
+		banner
 	) {
 		this._$element = $element;
 		this._editor = editor;
@@ -52,7 +59,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 		this._codeSamplesApi = codeSamplesApi;
 		this._shorten = shortUrlApi;
 		this._queryBuilderUrl = queryBuilderUrl;
-		this._showBanner = showBanner;
+		this._banner = banner;
 
 		this._init();
 	}
@@ -234,14 +241,13 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 		}
 
 		// render the banner
-		if ( this._showBanner ) {
+		if ( this._banner ) {
 			var bannerContent = $( '<span>' )
-				.attr( 'data-i18n', '[html]wdqs-app-query-builder-banner-content' )
-				.addClass( 'wdqs-app-query-builder-banner-content' )
-				.html( 'Do you need help creating a query? You can build queries without ' +
-					'having to write SPARQL in the new <a>Query Builder</a>.' );
+				.attr( 'data-i18n', '[html]' + this._banner.i18nKey )
+				.addClass( this._banner.i18nKey )
+				.html( this._banner.default );
 			new wikibase.queryService.ui.Banner(
-				'survey2021Banner',
+				this._banner.storageKey,
 				renderBanner,
 				onBannerDismiss,
 				true,
@@ -350,6 +356,12 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 		if ( ( e.ctrlKey || e.metaKey ) && e.key === 'Enter' ) {
 			// e.metaKey is used for Mac (https://stackoverflow.com/a/21996827)
 			$( 'button#execute-button' ).click();
+			return false;
+		}
+
+		if ( ( e.ctrlKey || e.metaKey ) && e.key === 'Escape' && !$( 'button#cancel-button' ).prop( 'disabled' ) ) {
+			// e.metaKey is used for Mac (https://stackoverflow.com/a/21996827)
+			$( 'button#cancel-button' ).click();
 			return false;
 		}
 
@@ -666,6 +678,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 	SELF.prototype._initHandlers = function () {
 		var self = this;
 		$( '#query-form' ).submit( $.proxy( this._handleQuerySubmit, this ) );
+		$( '#cancel-button' ).on( 'click', $.proxy( this._handleQueryCancel, this ) );
 		$( '.namespace-shortcuts' ).on( 'change', 'select',
 			$.proxy( this._handleNamespaceSelected, this ) );
 
@@ -825,7 +838,7 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 			$( '#execute-button' ).prop( 'disabled', false );
 		} else {
 			$( '#empty-query-error' ).hide();
-			// here
+			$( '#cancel-button' ).prop( 'disabled', false );
 			this._resultView.draw( this._editor.getValue() ).catch( function ( error ) {
 				try {
 					self._editor.highlightError( error );
@@ -834,8 +847,20 @@ wikibase.queryService.ui.App = ( function ( $, window, _, Cookies, moment ) {
 				}
 			} ).then( function () {
 				$( '#execute-button' ).prop( 'disabled', false );
+				$( '#cancel-button' ).prop( 'disabled', true );
 			} );
 		}
+	};
+
+	/**
+	 * @private
+	 */
+	SELF.prototype._handleQueryCancel = function ( e ) {
+		e.preventDefault();
+		this._track( 'buttonClick.cancel' );
+		$( '#cancel-button' ).prop( 'disabled', true );
+		this._resultView.cancel();
+		$( '#execute-button' ).prop( 'disabled', false );
 	};
 
 	/**

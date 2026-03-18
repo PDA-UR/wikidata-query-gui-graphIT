@@ -17,6 +17,7 @@
 	"wdqs-app-button-help": "Axuda",
 	"wdqs-app-button-run": "Executar",
 	"wdqs-app-button-run-title": "Executar a consulta (CTRL + ENTER)",
+	"wdqs-app-button-cancel-title": "Cancelar a consulta (CTRL + ESC)",
 	"wdqs-app-button-clear": "Limpar",
 	"wdqs-app-button-clear-title": "Limpar a consulta",
 	"wdqs-app-button-restore-title": "Restaurar a consulta anterior",
@@ -101,6 +102,7 @@
 	"wdqs-dialog-examples-preview-result": "Vista previa do resultado",
 	"wdqs-dialog-key-shortcut-title": "Atallos de teclado",
 	"wdqs-dialog-key-shortcut-run-query": "Executar a consulta.",
+	"wdqs-dialog-key-shortcut-cancel-query": "Cancelar a consulta.",
 	"wdqs-dialog-key-shortcut-esc": "Deixar o campo de entrada ou a área de texto actual.",
 	"wdqs-dialog-key-shortcut-show-shortcut-help": "Amosar a axuda sobre os atallos de teclado para a páxina actual.",
 	"wdqs-dialog-key-shortcut-focus-textarea": "Seleccionar a área de texto da consulta.",
@@ -125,6 +127,7 @@
 	"wdqs-ve-sb-suggestions": "Suxestións",
 	"wdqs-ve-sb-other": "Outro",
 	"wdqs-action-query": "Executando a consulta",
+	"wdqs-action-stop-query": "A consulta cancelouse",
 	"wdqs-action-render": "Presentando o resultado",
 	"wdqs-action-error-display": "Non se pode amosar o resultado",
 	"wdqs-action-timeout": "Superouse o límite de tempo da consulta",
@@ -140,5 +143,6 @@
 	"wdqs-embed-button-edit-code": "Editar SPARQL",
 	"wdqs-embed-button-edit-code-title": "Editar esta consulta co editor SPARQL",
 	"wdqs-embed-explorer-button-incoming": "Amosar ligazóns entrantes",
-	"wdqs-embed-explorer-button-outgoing": "Amosar ligazóns saíntes"
+	"wdqs-embed-explorer-button-outgoing": "Amosar ligazóns saíntes",
+	"wdqs-app-graph-split-banner-content": "A túa consulta inclúe elementos que describen artigos científicos? A próxima división do gráfico vai afectarche. Obtén máis información <a href=\"https://www.wikidata.org/wiki/Special:MyLanguage/Wikidata:SPARQL_query_service/WDQS_backend_update/September_2024_scaling_update\">neste anuncio</a>."
 }
