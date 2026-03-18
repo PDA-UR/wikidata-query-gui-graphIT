@@ -1,29 +1,26 @@
 ## Additional Information for this Fork
-Develop with a local wikibase docker setup:
-- set up a default one using this [guide](https://www.mediawiki.org/wiki/Wikibase/Docker) (should be fine with just the minimal install)
-- set up a custom GraphIT configuration using the private repo 
-- insert (test) data
 
-### In this Repo
-- for development use:
-  - `npm start` (uses http-server)
-  - or smth like the vs-code extension "Live Server" (for automatic reload)
-  - (and start your docker container, of course)
-- create a `custom-config.js` file and override the necessary settings, with something like this:
+### Development
+1. clone repo and `npm i`
+2. create `custom-config.json`-file in root folder, it should look something like this:
 ```json
 {
     "api": {
       "sparql": {
-        "uri": "http://localhost:8834/proxy/wdqs/bigdata/namespace/wdq/sparql"
+        "uri": "https://query.graphit.ur.de/proxy/wdqs/bigdata/namespace/wdq/sparql"
       },
       "wikibase": {
-        "uri": "http://localhost:80/w/api.php"
+        "uri": "https://graphit.ur.de/w/api.php"
       }
     }
 }
 ```
-- NOTE: can cause issues with CORS. So you can try adding `$wgCrossSiteAJAXdomains = ['*', "optional:your-local-url"];` to the `LocalSettings.php` of your local wikibase docker setup (don't push this change!)
-- NOTE: with `npm start` it can happen that changes to the code don't show up when running the server. Deleting your cache for `localhost` might help.
+3. If necessary update the links to work for a local copy of the database
+4. Start the server
+   - use `npm start` (uses http-server) or use something like the vs-code extension "Live Server" (for automatic reload)
+   		- NOTE: with `npm start` it can happen that changes to the code don't show up when running the server. Deleting your cache might help.
+   - if your using a local copy of the database start your docker container
+   		- NOTE: can cause issues with CORS. So you can try adding `$wgCrossSiteAJAXdomains = ['*', "optional:your-local-url"];` to the `LocalSettings.php` of your local wikibase docker setup (don't push this change!)
 
 ### Deployment
 - handled in the private GraphIT docker repo
@@ -108,20 +105,6 @@ npm install wikidata-query-gui
 
 ## Configuration
 Per default the Wikibase Query Service GUI is configured to be used as a local development test instance. It can be customized by creating a `custom-config.json` in the repository's root dir. This file can be used to override any of the default settings obtained from `default-config.json`.
-
-### Banner Message
-
-The banner message may be configured per site deployment. In order display a banner, add its banner key to the configuration:
-
-```js
-{
-// ...
-  "bannerName": "query-builder",
-// ...
-}
-```
-
-Empty values, falsy values and undefined banner keys will result in the banner not showing.
 
 ## Run tests
 
